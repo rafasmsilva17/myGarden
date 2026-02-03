@@ -1,0 +1,21 @@
+# GardenGes - Netlify Functions
+# Python dependencies for serverless functions
+
+# Core
+requests>=2.31.0
+
+# Database (usando JSON file ou futuro SQLite/PostgreSQL)
+# Para produção, considerar usar Supabase ou PlanetScale
+
+# eWeLink API integration
+# A API oficial requer OAuth, mas usaremos uma abordagem simplificada
+
+# Notifications
+# ntfy.sh usa HTTP requests simples
+
+# AI Integration (OpenAI ou similar)
+openai>=1.6.0
+
+# Utilities
+python-dateutil>=2.8.2
+python-dotenv>=1.0.0

@@ -1,0 +1,29 @@
+{
+  "name": "myGarden",
+  "short_name": "myGarden",
+  "description": "Gestão inteligente de estufa vertical",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a2f23",
+  "theme_color": "#1a2f23",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
