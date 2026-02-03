@@ -775,29 +775,46 @@ const handleClick = () => {
 }
 
 @media (max-width: 480px) {
+  .plant-slot-wrapper {
+    min-height: 50px;
+  }
+  
   .plant-slot-3d.slot-hover {
-    transform: scale(1.02);
+    transform: none;
+  }
+  
+  .soil-layer {
+    border-radius: 6px;
+  }
+  
+  .soil-hole {
+    inset: -1px;
+    border-radius: 7px;
   }
   
   .soil-depth-shadow {
     box-shadow: 
-      inset 0 4px 10px rgba(0,0,0,0.6),
-      inset 0 0 15px rgba(0,0,0,0.3);
+      inset 0 3px 8px rgba(0,0,0,0.5),
+      inset 0 0 10px rgba(0,0,0,0.2);
   }
   
   .add-button {
-    padding: 4px 8px;
-    opacity: 0.7;
+    padding: 4px;
+    opacity: 1;
     transform: none;
   }
   
   .slot-empty .add-button {
-    opacity: 0.7;
+    opacity: 1;
     transform: none;
   }
   
+  .add-button-bg {
+    border-radius: 6px;
+  }
+  
   .add-icon {
-    font-size: 18px;
+    font-size: 16px;
   }
   
   .add-text {
@@ -812,19 +829,49 @@ const handleClick = () => {
   .plant-info {
     display: none;
   }
+  
+  .stage-badge {
+    width: 20px;
+    height: 20px;
+    top: 2px;
+    right: 2px;
+  }
+  
+  .badge-emoji {
+    font-size: 10px;
+  }
+  
+  .plant-sprite-container {
+    max-width: 80%;
+    max-height: 85%;
+  }
 }
 
 @media (max-width: 380px) {
+  .plant-slot-wrapper {
+    min-height: 40px;
+  }
+  
   .plant-slot-3d {
-    border-radius: 6px;
+    border-radius: 4px;
   }
   
   .add-icon {
     font-size: 14px;
   }
   
+  .soil-rim,
   .soil-rim::before {
     display: none;
+  }
+  
+  .stage-badge {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .badge-emoji {
+    font-size: 8px;
   }
 }
 </style>

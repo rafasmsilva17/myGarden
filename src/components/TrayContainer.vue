@@ -516,49 +516,6 @@ defineProps({
 @media (max-width: 768px) {
   .tray-container {
     max-width: 100%;
-    overflow: hidden;
-  }
-  
-  .tray-border-top {
-    height: 14px;
-  }
-  
-  .tray-border-bottom {
-    height: 14px;
-  }
-  
-  .tray-side {
-    width: 14px;
-  }
-  
-  .tray-side-left::before,
-  .tray-side-right::before {
-    display: none;
-  }
-  
-  .tray-interior {
-    min-height: 160px;
-  }
-  
-  .slots-grid {
-    padding: 12px;
-    gap: 8px;
-    min-height: 140px;
-  }
-  
-  .tray-scene {
-    transform: rotateX(8deg);
-  }
-  
-  .tray-front-face {
-    height: 10px;
-    bottom: -10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .tray-container {
-    perspective: 800px;
   }
   
   .tray-scene {
@@ -569,25 +526,36 @@ defineProps({
     transform: rotateX(5deg);
   }
   
-  .tray-border-top,
+  .tray-border-top {
+    height: 12px;
+  }
+  
   .tray-border-bottom {
-    height: 10px;
-    border-radius: 4px 4px 0 0;
+    height: 12px;
   }
   
   .tray-side {
-    width: 10px;
+    width: 12px;
+  }
+  
+  .tray-side-left::before,
+  .tray-side-right::before {
+    display: none;
   }
   
   .tray-interior {
-    min-height: 130px;
-    border-width: 2px;
+    min-height: 180px;
   }
   
   .slots-grid {
-    padding: 8px;
-    gap: 6px;
-    min-height: 110px;
+    padding: 10px;
+    gap: 8px;
+    min-height: 160px;
+  }
+  
+  .tray-front-face {
+    height: 8px;
+    bottom: -8px;
   }
   
   .tray-ground-shadow,
@@ -596,23 +564,63 @@ defineProps({
   }
 }
 
-@media (max-width: 380px) {
+@media (max-width: 480px) {
+  .tray-container {
+    perspective: none;
+  }
+  
   .tray-scene {
-    transform: rotateX(3deg);
+    transform: none;
+  }
+  
+  .tray-container:hover .tray-scene {
+    transform: none;
   }
   
   .tray-border-top,
   .tray-border-bottom {
     height: 8px;
+    border-radius: 4px 4px 0 0;
   }
   
   .tray-side {
     width: 8px;
   }
   
+  .tray-interior {
+    min-height: 150px;
+    border-width: 2px;
+  }
+  
+  .slots-grid {
+    padding: 8px;
+    gap: 6px;
+    min-height: 130px;
+  }
+  
+  .tray-front-face {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .tray-border-top,
+  .tray-border-bottom {
+    height: 6px;
+  }
+  
+  .tray-side {
+    width: 6px;
+  }
+  
   .slots-grid {
     padding: 6px;
     gap: 4px;
+    min-height: 110px;
+  }
+  
+  .tray-interior {
+    min-height: 120px;
   }
 }
 </style>
