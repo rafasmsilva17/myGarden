@@ -284,6 +284,8 @@ watch(currentFloor, () => {
   padding: 20px;
   max-width: 1200px;
   margin: 0 auto;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 /* Navegação */
@@ -521,6 +523,9 @@ watch(currentFloor, () => {
 /* Tabuleiro */
 .tray-wrapper {
   margin-bottom: 40px;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Estatísticas */
@@ -712,12 +717,28 @@ watch(currentFloor, () => {
     padding: 8px 12px;
     font-size: 12px;
   }
+  
+  .tray-wrapper {
+    margin-bottom: 24px;
+  }
 }
 
 @media (max-width: 480px) {
+  .floor-view {
+    padding: 12px;
+  }
+  
+  .floor-title {
+    font-size: 1.25rem;
+  }
+  
   .tray-wrapper {
-    overflow-x: auto;
+    overflow: hidden;
     padding-bottom: 8px;
+    margin-left: -4px;
+    margin-right: -4px;
+    padding-left: 4px;
+    padding-right: 4px;
   }
   
   .sensor-item {
@@ -741,6 +762,27 @@ watch(currentFloor, () => {
   .back-button {
     padding: 8px 12px;
     font-size: 14px;
+  }
+  
+  .floor-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+
+@media (max-width: 380px) {
+  .floor-view {
+    padding: 8px;
+  }
+  
+  .nav-btn {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  .sensor-panel {
+    padding: 12px;
+    gap: 10px;
   }
 }
 </style>

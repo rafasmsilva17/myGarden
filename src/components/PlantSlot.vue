@@ -736,4 +736,95 @@ const handleClick = () => {
 .animate-sway {
   animation: sway-3d 4s ease-in-out infinite;
 }
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .plant-slot-3d {
+    border-radius: 8px;
+  }
+  
+  .soil-hole {
+    inset: -2px;
+    border-radius: 10px;
+  }
+  
+  .add-button {
+    padding: 8px 12px;
+  }
+  
+  .add-icon {
+    font-size: 22px;
+  }
+  
+  .add-text {
+    font-size: 10px;
+  }
+  
+  .info-card {
+    padding: 8px;
+    min-width: 100px;
+  }
+  
+  .info-name {
+    font-size: 11px;
+  }
+  
+  .stat-value {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .plant-slot-3d.slot-hover {
+    transform: scale(1.02);
+  }
+  
+  .soil-depth-shadow {
+    box-shadow: 
+      inset 0 4px 10px rgba(0,0,0,0.6),
+      inset 0 0 15px rgba(0,0,0,0.3);
+  }
+  
+  .add-button {
+    padding: 4px 8px;
+    opacity: 0.7;
+    transform: none;
+  }
+  
+  .slot-empty .add-button {
+    opacity: 0.7;
+    transform: none;
+  }
+  
+  .add-icon {
+    font-size: 18px;
+  }
+  
+  .add-text {
+    display: none;
+  }
+  
+  .soil-particles,
+  .soil-pebbles {
+    display: none;
+  }
+  
+  .plant-info {
+    display: none;
+  }
+}
+
+@media (max-width: 380px) {
+  .plant-slot-3d {
+    border-radius: 6px;
+  }
+  
+  .add-icon {
+    font-size: 14px;
+  }
+  
+  .soil-rim::before {
+    display: none;
+  }
+}
 </style>
