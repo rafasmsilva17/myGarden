@@ -1,8 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import axios from 'axios'
+import * as supabaseLib from '@/lib/supabase'
 
 const API_BASE = '/.netlify/functions'
+
+// Verificar se está em modo demo
+const isDemoMode = () => localStorage.getItem('myGarden_demo') === 'true'
 
 // Helper para localStorage
 const loadFromStorage = (key, defaultValue) => {
@@ -117,19 +121,26 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     selectedPlant.value = plant
   }
   
-  // ========== API CALLS ==========
+  // ========== API CALLS (Supabase ou localStorage) ==========
   
   // Buscar todas as plantas
   const fetchPlants = async () => {
     isLoading.value = true
     try {
-      const response = await axios.get(`${API_BASE}/plants`)
-      plants.value = response.data.plants || []
+      // Se demo mode, usar localStorage
+      if (isDemoMode()) {
+        plants.value = loadFromStorage('myGarden_plants', getMockPlants())
+        return
+      }
+      
+      // Tentar Supabase
+      const { data, error } = await supabaseLib.fetchPlants()
+      if (error) throw error
+      plants.value = data || []
     } catch (error) {
       console.error('Erro ao buscar plantas:', error)
-      showToast('Erro ao carregar plantas', 'error')
-      // Dados mock para desenvolvimento
-      plants.value = getMockPlants()
+      // Fallback para localStorage
+      plants.value = loadFromStorage('myGarden_plants', getMockPlants())
     } finally {
       isLoading.value = false
     }
@@ -138,16 +149,29 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   // Adicionar planta
   const addPlant = async (plantData) => {
     try {
-      const response = await axios.post(`${API_BASE}/plants`, plantData)
-      const newPlant = response.data.plant
-      plants.value.push(newPlant)
-      return newPlant
+      // Se demo mode, usar localStorage
+      if (isDemoMode()) {
+        const mockPlant = {
+          id: Date.now().toString(),
+          ...plantData,
+          created_at: new Date().toISOString()
+        }
+        plants.value.push(mockPlant)
+        return mockPlant
+      }
+      
+      // Usar Supabase
+      const { data, error } = await supabaseLib.addPlant(plantData)
+      if (error) throw error
+      plants.value.push(data)
+      return data
     } catch (error) {
       console.error('Erro ao adicionar planta:', error)
-      // Fallback para desenvolvimento local
+      // Fallback local
       const mockPlant = {
         id: Date.now().toString(),
-        ...plantData
+        ...plantData,
+        created_at: new Date().toISOString()
       }
       plants.value.push(mockPlant)
       return mockPlant
@@ -157,21 +181,26 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   // Remover planta
   const removePlant = async (plantId) => {
     try {
-      await axios.delete(`${API_BASE}/plants/${plantId}`)
+      if (!isDemoMode()) {
+        const { error } = await supabaseLib.deletePlant(plantId)
+        if (error) throw error
+      }
       plants.value = plants.value.filter(p => p.id !== plantId)
       showToast('Planta removida com sucesso', 'success')
     } catch (error) {
       console.error('Erro ao remover planta:', error)
-      // Fallback local
       plants.value = plants.value.filter(p => p.id !== plantId)
-      showToast('Planta removida (local)', 'warning')
+      showToast('Planta removida', 'warning')
     }
   }
   
   // Atualizar planta
   const updatePlant = async (plantId, updates) => {
     try {
-      const response = await axios.put(`${API_BASE}/plants/${plantId}`, updates)
+      if (!isDemoMode()) {
+        const { data, error } = await supabaseLib.updatePlant(plantId, updates)
+        if (error) throw error
+      }
       const index = plants.value.findIndex(p => p.id === plantId)
       if (index !== -1) {
         plants.value[index] = { ...plants.value[index], ...response.data.plant }

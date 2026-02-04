@@ -10,6 +10,7 @@
     "netlify": "netlify dev"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.94.0",
     "axios": "^1.6.2",
     "netlify": "^23.14.0",
     "pinia": "^2.1.7",

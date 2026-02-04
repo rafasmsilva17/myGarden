@@ -1,6 +1,7 @@
 <template>
   <div class="min-h-screen">
-    <header class="bg-greenhouse-metal/30 backdrop-blur-sm border-b border-greenhouse-metal/50 sticky top-0 z-50">
+    <!-- Header - só mostrar se não estiver na página de login -->
+    <header v-if="!isLoginPage" class="bg-greenhouse-metal/30 backdrop-blur-sm border-b border-greenhouse-metal/50 sticky top-0 z-50">
       <div class="max-w-7xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between">
         <router-link to="/" class="flex items-center gap-2 sm:gap-3">
           <div class="w-8 h-8 sm:w-10 sm:h-10 bg-leaf-green rounded-full flex items-center justify-center">
@@ -27,12 +28,12 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+    <main :class="isLoginPage ? '' : 'max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6'">
       <router-view />
     </main>
 
     <!-- Modal Global -->
-    <AddPlantModal />
+    <AddPlantModal v-if="!isLoginPage" />
     
     <!-- Modal de Definições -->
     <div v-if="showSettings" class="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" @click.self="showSettings = false">
@@ -78,9 +79,23 @@
           🔔 Testar Notificação
         </button>
         
+        <!-- Conta / Logout -->
+        <div class="mb-4 pt-4 border-t border-white/10">
+          <h3 class="text-white font-semibold mb-2">👤 Conta</h3>
+          <div v-if="authStore.isAuthenticated" class="space-y-2">
+            <p class="text-white/60 text-sm">{{ authStore.userEmail }}</p>
+            <button
+              @click="handleLogout"
+              class="w-full bg-red-600/20 hover:bg-red-600/30 text-red-400 py-2 rounded-lg font-semibold border border-red-600/30"
+            >
+              🚪 Sair da conta
+            </button>
+          </div>
+        </div>
+        
         <!-- Info -->
         <div class="text-center text-white/30 text-xs">
-          myGarden v1.0 • Dados guardados localmente
+          myGarden v1.0 • Supabase
         </div>
       </div>
     </div>
@@ -108,13 +123,20 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useGreenhouseStore } from '@/stores/greenhouse'
+import { useAuthStore } from '@/stores/auth'
 import AddPlantModal from '@/components/AddPlantModal.vue'
 
+const route = useRoute()
+const router = useRouter()
 const store = useGreenhouseStore()
+const authStore = useAuthStore()
+
 const toasts = computed(() => store.toasts)
 const showSettings = ref(false)
 const ntfyTopic = ref(store.notifyTopic || '')
+const isLoginPage = computed(() => route.name === 'login')
 
 const refreshSensors = async () => {
   await store.fetchSensorData()
@@ -136,6 +158,12 @@ const testNotification = async () => {
   } else {
     store.showToast('Erro ao enviar notificação', 'error')
   }
+}
+
+const handleLogout = async () => {
+  await authStore.logout()
+  showSettings.value = false
+  router.push('/login')
 }
 </script>
 

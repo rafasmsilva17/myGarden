@@ -9,4 +9,10 @@ const pinia = createPinia()
 
 app.use(pinia)
 app.use(router)
-app.mount('#app')
+
+// Inicializar autenticação
+import { useAuthStore } from './stores/auth'
+const authStore = useAuthStore(pinia)
+authStore.initialize().then(() => {
+  app.mount('#app')
+})
