@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGreenhouseStore } from '@/stores/greenhouse'
 import { useAuthStore } from '@/stores/auth'
@@ -135,16 +135,21 @@ const authStore = useAuthStore()
 
 const toasts = computed(() => store.toasts)
 const showSettings = ref(false)
-const ntfyTopic = ref(store.notifyTopic || '')
+const ntfyTopic = ref('')
 const isLoginPage = computed(() => route.name === 'login')
+
+// Sincronizar ntfyTopic com o store quando este for carregado
+watch(() => store.notifyTopic, (newVal) => {
+  ntfyTopic.value = newVal || ''
+}, { immediate: true })
 
 const refreshSensors = async () => {
   await store.fetchSensorData()
   store.showToast('Sensor atualizado!', 'success')
 }
 
-const saveNtfy = () => {
-  store.setNotifyTopic(ntfyTopic.value)
+const saveNtfy = async () => {
+  await store.setNotifyTopic(ntfyTopic.value)
 }
 
 const testNotification = async () => {

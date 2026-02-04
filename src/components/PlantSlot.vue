@@ -229,6 +229,11 @@ const handleClick = () => {
   position: relative;
   aspect-ratio: 1;
   cursor: pointer;
+  z-index: 1;
+}
+
+.plant-slot-wrapper:hover {
+  z-index: 50;
 }
 
 /* Container 3D */
@@ -243,7 +248,6 @@ const handleClick = () => {
 
 .plant-slot-3d.slot-hover {
   transform: scale(1.05);
-  z-index: 20;
 }
 
 /* Buraco/Depressão base */

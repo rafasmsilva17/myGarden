@@ -329,6 +329,8 @@ defineProps({
   /* Borda interior para definir profundidade */
   border: 4px solid #2D1F15;
   border-top-width: 6px;
+  /* Permitir overflow para popups */
+  overflow: visible;
 }
 
 /* Múltiplas camadas de sombra para profundidade extrema */
@@ -398,6 +400,7 @@ defineProps({
   z-index: 2;
   height: 100%;
   min-height: 200px;
+  overflow: visible;
 }
 
 /* Borda inferior - 3D com face frontal visível */

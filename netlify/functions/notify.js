@@ -36,15 +36,19 @@ export const handler = async (event, context) => {
       }
     }
 
-    // Enviar notificação para ntfy.sh
-    const response = await fetch(`https://ntfy.sh/${topic}`, {
+    // Enviar notificação para ntfy.sh via JSON (suporta UTF-8/emojis)
+    const response = await fetch(`https://ntfy.sh`, {
       method: 'POST',
       headers: {
-        'Title': title || 'myGarden',
-        'Priority': priority || 'default',
-        'Tags': 'seedling,droplet'
+        'Content-Type': 'application/json'
       },
-      body: message || 'Notificação do myGarden'
+      body: JSON.stringify({
+        topic: topic,
+        title: title || 'myGarden',
+        message: message || 'Notificação do myGarden',
+        priority: priority === 'high' ? 4 : 3,
+        tags: ['seedling', 'droplet']
+      })
     })
 
     if (response.ok) {

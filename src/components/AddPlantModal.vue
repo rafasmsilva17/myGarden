@@ -30,6 +30,7 @@
                   placeholder="Ex: Manjericão, Tomate, Alface..."
                   @input="onInputChange"
                   @focus="showSuggestions = true"
+                  @blur="handleBlur"
                   required
                 />
                 <!-- Sugestões -->

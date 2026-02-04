@@ -1,66 +1,19 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import axios from 'axios'
 import * as supabaseLib from '@/lib/supabase'
 
 const API_BASE = '/.netlify/functions'
 
-// Verificar se está em modo demo
-const isDemoMode = () => localStorage.getItem('myGarden_demo') === 'true'
-
-// Helper para localStorage
-const loadFromStorage = (key, defaultValue) => {
-  try {
-    const saved = localStorage.getItem(key)
-    return saved ? JSON.parse(saved) : defaultValue
-  } catch {
-    return defaultValue
-  }
-}
-
-const saveToStorage = (key, value) => {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch (e) {
-    console.warn('Erro ao salvar localStorage:', e)
-  }
-}
-
 export const useGreenhouseStore = defineStore('greenhouse', () => {
   // ========== STATE ==========
-  
-  // Plantas (carrega do localStorage)
-  const plants = ref(loadFromStorage('myGarden_plants', []))
-  
-  // Dados do sensor da estufa (sensor único para toda a estufa)
-  const sensor = ref({
-    humidity: 0,
-    temperature: 0
-  })
-  
-  // Configuração de notificações
-  const notifyTopic = ref(loadFromStorage('myGarden_ntfy', ''))
-  
-  // Modal de adicionar planta
-  const addPlantModal = ref({
-    isOpen: false,
-    floorNumber: 1,
-    slotIndex: 0
-  })
-  
-  // Planta selecionada
+  const plants = ref([])
+  const sensor = ref({ humidity: 0, temperature: 0 })
+  const notifyTopic = ref('')
+  const addPlantModal = ref({ isOpen: false, floorNumber: 1, slotIndex: 0 })
   const selectedPlant = ref(null)
-  
-  // Toasts (notificações)
   const toasts = ref([])
-  
-  // Loading states
   const isLoading = ref(false)
-  
-  // Guardar plantas no localStorage quando mudam
-  watch(plants, (newPlants) => {
-    saveToStorage('myGarden_plants', newPlants)
-  }, { deep: true })
 
   // ========== GETTERS ==========
   
@@ -85,9 +38,8 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   // Plantas que precisam de água
   const plantsNeedingWater = computed(() => {
     return plants.value.filter(plant => {
-      const sensor = sensors.value[plant.andar]
-      if (!sensor) return false
-      return sensor.humidity < plant.targets_humidade - 5
+      if (!sensor.value) return false
+      return sensor.value.humidity < plant.targets_humidade - 5
     })
   })
 
@@ -121,26 +73,19 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     selectedPlant.value = plant
   }
   
-  // ========== API CALLS (Supabase ou localStorage) ==========
+  // ========== API CALLS (Supabase) ==========
   
   // Buscar todas as plantas
   const fetchPlants = async () => {
     isLoading.value = true
     try {
-      // Se demo mode, usar localStorage
-      if (isDemoMode()) {
-        plants.value = loadFromStorage('myGarden_plants', getMockPlants())
-        return
-      }
-      
-      // Tentar Supabase
       const { data, error } = await supabaseLib.fetchPlants()
       if (error) throw error
       plants.value = data || []
     } catch (error) {
       console.error('Erro ao buscar plantas:', error)
-      // Fallback para localStorage
-      plants.value = loadFromStorage('myGarden_plants', getMockPlants())
+      plants.value = [] // Limpar em caso de erro
+      showToast('Não foi possível carregar as plantas.', 'error')
     } finally {
       isLoading.value = false
     }
@@ -149,82 +94,64 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   // Adicionar planta
   const addPlant = async (plantData) => {
     try {
-      // Se demo mode, usar localStorage
-      if (isDemoMode()) {
-        const mockPlant = {
-          id: Date.now().toString(),
-          ...plantData,
-          created_at: new Date().toISOString()
-        }
-        plants.value.push(mockPlant)
-        return mockPlant
-      }
-      
-      // Usar Supabase
       const { data, error } = await supabaseLib.addPlant(plantData)
       if (error) throw error
-      plants.value.push(data)
+      if (data) {
+        plants.value.push(data)
+      }
       return data
     } catch (error) {
       console.error('Erro ao adicionar planta:', error)
-      // Fallback local
-      const mockPlant = {
-        id: Date.now().toString(),
-        ...plantData,
-        created_at: new Date().toISOString()
-      }
-      plants.value.push(mockPlant)
-      return mockPlant
+      showToast('Erro ao adicionar planta.', 'error')
+      return null
     }
   }
   
   // Remover planta
   const removePlant = async (plantId) => {
     try {
-      if (!isDemoMode()) {
-        const { error } = await supabaseLib.deletePlant(plantId)
-        if (error) throw error
-      }
+      const { error } = await supabaseLib.deletePlant(plantId)
+      if (error) throw error
+      
       plants.value = plants.value.filter(p => p.id !== plantId)
       showToast('Planta removida com sucesso', 'success')
     } catch (error) {
       console.error('Erro ao remover planta:', error)
-      plants.value = plants.value.filter(p => p.id !== plantId)
-      showToast('Planta removida', 'warning')
+      showToast('Erro ao remover planta.', 'error')
     }
   }
   
   // Atualizar planta
   const updatePlant = async (plantId, updates) => {
     try {
-      if (!isDemoMode()) {
-        const { data, error } = await supabaseLib.updatePlant(plantId, updates)
-        if (error) throw error
-      }
-      const index = plants.value.findIndex(p => p.id === plantId)
-      if (index !== -1) {
-        plants.value[index] = { ...plants.value[index], ...response.data.plant }
+      const { data, error } = await supabaseLib.updatePlant(plantId, updates)
+      if (error) throw error
+      
+      if (data) {
+        const index = plants.value.findIndex(p => p.id === plantId)
+        if (index !== -1) {
+          plants.value[index] = { ...plants.value[index], ...data }
+        }
       }
       showToast('Planta atualizada', 'success')
     } catch (error) {
       console.error('Erro ao atualizar planta:', error)
-      // Fallback local
-      const index = plants.value.findIndex(p => p.id === plantId)
-      if (index !== -1) {
-        plants.value[index] = { ...plants.value[index], ...updates }
-      }
+      showToast('Erro ao atualizar planta.', 'error')
     }
   }
   
   // Buscar dados da IA
   const lookupPlantAI = async (plantName) => {
+    isLoading.value = true
     try {
       const response = await axios.post(`${API_BASE}/ai-lookup`, { name: plantName })
       return response.data
     } catch (error) {
       console.error('Erro ao consultar IA:', error)
-      // Dados mock baseados no nome
-      return getMockAIData(plantName)
+      showToast('Serviço de IA indisponível.', 'error')
+      return null // Retorna nulo para indicar o erro
+    } finally {
+      isLoading.value = false
     }
   }
   
@@ -232,11 +159,12 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   const fetchSensorData = async () => {
     try {
       const response = await axios.get(`${API_BASE}/sensors`)
-      sensor.value = response.data.sensor || sensor.value
+      sensor.value = response.data.sensor || { humidity: 0, temperature: 0 }
     } catch (error) {
       console.error('Erro ao buscar sensor:', error)
-      // Dados mock - sensor único para toda a estufa
-      sensor.value = { humidity: 58, temperature: 24 }
+      // Mantém o valor anterior ou zera se não houver
+      sensor.value = sensor.value || { humidity: 0, temperature: 0 }
+      showToast('Não foi possível ler os sensores.', 'error')
     }
     
     // Verificar se precisa notificar após atualizar sensor
@@ -245,78 +173,100 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     }
   }
   
-  // Calcular rega necessária
-  const calculateWatering = async (floorNumber) => {
-    try {
-      const response = await axios.post(`${API_BASE}/calculate-watering`, {
-        floor: floorNumber
-      })
-      return response.data.recommendations
-    } catch (error) {
-      console.error('Erro ao calcular rega:', error)
-      // Cálculo local mock - usa sensor global
-      const floorPlants = getPlantsByFloor(floorNumber)
-      const currentSensor = sensor.value
+  // Calcular rega necessária (cálculo local)
+  const calculateWatering = (floorNumber) => {
+    const SPRAY_ML = 0.55
+    const ML_PER_PERCENT = 2.0
+    
+    const floorPlants = getPlantsByFloor(floorNumber)
+    const currentHumidity = sensor.value.humidity || 50
+    
+    return floorPlants.map(plant => {
+      const targetHumidity = plant.targets_humidade || 65
+      const diff = targetHumidity - currentHumidity
       
-      const SPRAY_ML = 0.55
-      return floorPlants.map(plant => {
-        const diff = plant.targets_humidade - currentSensor.humidity
-        if (diff <= 0) {
-          return {
-            plant_id: plant.id,
-            plant_name: plant.nome,
-            sprays_needed: 0,
-            ml_needed: 0,
-            status: 'ok',
-            message: 'Humidade adequada'
-          }
-        }
-        // Fórmula: (Target - Atual) * 2ml / 0.55ml por spray
-        const mlNeeded = Math.round(diff * 2)
-        const sprays = Math.round(mlNeeded / SPRAY_ML)
+      if (diff <= 0) {
         return {
           plant_id: plant.id,
           plant_name: plant.nome,
-          sprays_needed: sprays,
-          ml_needed: mlNeeded,
-          status: diff <= 5 ? 'light_water' : 'needs_water',
-          message: `${sprays} spray${sprays !== 1 ? 's' : ''}`
+          sprays_needed: 0,
+          ml_needed: 0,
+          status: 'ok',
+          message: 'Humidade adequada'
         }
-      })
-    }
+      }
+      
+      const mlNeeded = Math.round(diff * ML_PER_PERCENT)
+      const spraysNeeded = Math.round(mlNeeded / SPRAY_ML)
+      
+      return {
+        plant_id: plant.id,
+        plant_name: plant.nome,
+        sprays_needed: spraysNeeded,
+        ml_needed: mlNeeded,
+        status: diff > 10 ? 'needs_water' : 'light_water',
+        message: `${spraysNeeded} spray${spraysNeeded !== 1 ? 's' : ''}`
+      }
+    })
   }
   
   // Enviar notificação para o telemóvel
   const sendNotification = async (title, message, priority = 'default') => {
     const topic = notifyTopic.value
+    console.log('Enviando notificação para tópico:', topic)
+    
     if (!topic) {
-      console.log('Notificações não configuradas')
+      console.log('Notificações não configuradas - tópico vazio')
+      showToast('Configure o tópico ntfy nas definições primeiro', 'warning')
       return false
     }
     
     try {
-      await axios.post(`${API_BASE}/notify`, {
+      const response = await axios.post(`${API_BASE}/notify`, {
         topic,
         title,
         message,
         priority
       })
+      console.log('Resposta notify:', response.data)
       return true
     } catch (error) {
-      console.error('Erro ao enviar notificação:', error)
+      console.error('Erro ao enviar notificação:', error.response?.data || error.message)
       return false
     }
   }
   
-  // Configurar tópico de notificações
-  const setNotifyTopic = (topic) => {
+  // Configurar tópico de notificações (guarda no Supabase)
+  const setNotifyTopic = async (topic) => {
     notifyTopic.value = topic
-    saveToStorage('myGarden_ntfy', topic)
-    showToast('Notificações configuradas!', 'success')
+    try {
+      await supabaseLib.saveUserSettings({ ntfy_topic: topic })
+      showToast('Notificações configuradas!', 'success')
+    } catch (error) {
+      console.error('Erro ao guardar configurações:', error)
+      showToast('Configurações guardadas localmente', 'warning')
+    }
+  }
+  
+  // Carregar configurações do utilizador
+  const loadUserSettings = async () => {
+    try {
+      const { data, error } = await supabaseLib.fetchUserSettings()
+      console.log('Configurações carregadas:', data, 'Erro:', error)
+      if (data && !error) {
+        notifyTopic.value = data.ntfy_topic || ''
+        console.log('Tópico ntfy carregado:', notifyTopic.value)
+      } else if (error) {
+        // Se a tabela não existe ou utilizador não tem configurações, ignorar
+        console.log('Sem configurações guardadas (normal para novo utilizador)')
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error)
+    }
   }
   
   // Controlo de spam de notificações (1 notificação por hora máximo)
-  const lastNotifyTime = ref(loadFromStorage('myGarden_lastNotify', 0))
+  const lastNotifyTime = ref(0)
   
   // Verificar e notificar se precisa de rega
   const checkAndNotify = async () => {
@@ -345,7 +295,6 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
       
       if (success) {
         lastNotifyTime.value = now
-        saveToStorage('myGarden_lastNotify', now)
       }
       return success
     }
@@ -471,12 +420,10 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   const initialize = async () => {
     await Promise.all([
       fetchPlants(),
-      fetchSensorData()
+      fetchSensorData(),
+      loadUserSettings()
     ])
   }
-  
-  // Inicializar automaticamente
-  initialize()
 
   return {
     // State
@@ -509,6 +456,7 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     calculateWatering,
     sendNotification,
     setNotifyTopic,
+    loadUserSettings,
     checkAndNotify,
     initialize
   }

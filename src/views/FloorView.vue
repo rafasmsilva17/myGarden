@@ -525,7 +525,8 @@ watch(currentFloor, () => {
   margin-bottom: 40px;
   width: 100%;
   max-width: 100%;
-  overflow: hidden;
+  overflow: visible;
+  padding-top: 80px; /* Espaço para o popup não ser cortado */
 }
 
 /* Estatísticas */

@@ -10,9 +10,18 @@ const pinia = createPinia()
 app.use(pinia)
 app.use(router)
 
-// Inicializar autenticação
+// Importar stores
 import { useAuthStore } from './stores/auth'
+import { useGreenhouseStore } from './stores/greenhouse'
+
 const authStore = useAuthStore(pinia)
+const greenhouseStore = useGreenhouseStore(pinia)
+
+// Inicializar autenticação e depois montar a app
 authStore.initialize().then(() => {
+  // Se estiver autenticado, carregar dados da estufa
+  if (authStore.isAuthenticated) {
+    greenhouseStore.initialize()
+  }
   app.mount('#app')
 })
