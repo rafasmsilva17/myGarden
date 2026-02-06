@@ -167,10 +167,9 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
       showToast('Não foi possível ler os sensores.', 'error')
     }
     
-    // Verificar se precisa notificar após atualizar sensor
-    if (notifyTopic.value) {
-      await checkAndNotify()
-    }
+    // Nota: Notificações automáticas agora são enviadas pelo backend
+    // via função Netlify schedulada a cada 10 minutos
+    // Não é necessário verificar aqui no frontend
   }
   
   // Calcular rega necessária (cálculo local)

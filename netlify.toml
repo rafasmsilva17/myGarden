@@ -22,3 +22,10 @@
   from = "/*"
   to = "/index.html"
   status = 200
+# ========================================
+# Netlify Scheduled Functions (Cron Jobs)
+# ========================================
+[[functions]]
+  path = "netlify/functions/check-notifications.js"
+  # Executar a cada 10 minutos
+  schedule = "*/10 * * * *"
