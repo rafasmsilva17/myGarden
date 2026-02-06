@@ -6,6 +6,9 @@
   # Suporte para Python functions
   included_files = ["netlify/functions/**"]
 
+[functions."check-notifications"]
+  schedule = "*/10 * * * *"
+
 [dev]
   command = "npm run dev"
   targetPort = 3000
@@ -22,10 +25,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-# ========================================
-# Netlify Scheduled Functions (Cron Jobs)
-# ========================================
-[[functions]]
-  path = "netlify/functions/check-notifications.js"
-  # Executar a cada 10 minutos
-  schedule = "*/10 * * * *"

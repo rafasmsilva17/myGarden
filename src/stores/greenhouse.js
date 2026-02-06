@@ -413,6 +413,35 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     }
   }
   
+  // ========== AUTO-POLLING SENSORES ==========
+  
+  let pollingInterval = null
+
+  const startSensorPolling = (intervalMs = 120000) => {
+    stopSensorPolling()
+    pollingInterval = setInterval(async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/sensors`)
+        const newData = response.data.sensor || { humidity: 0, temperature: 0 }
+        // Só atualiza se os valores mudaram
+        if (newData.humidity !== sensor.value.humidity || newData.temperature !== sensor.value.temperature) {
+          sensor.value = newData
+          console.log(`🔄 Sensor atualizado: ${newData.humidity}% | ${newData.temperature}°C`)
+        }
+      } catch (error) {
+        console.warn('Auto-poll falhou:', error.message)
+      }
+    }, intervalMs)
+    console.log(`📡 Auto-polling ativo (a cada ${intervalMs / 1000}s)`)
+  }
+
+  const stopSensorPolling = () => {
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      pollingInterval = null
+    }
+  }
+
   // ========== INICIALIZAÇÃO ==========
   
   // Carregar dados iniciais
@@ -422,6 +451,8 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
       fetchSensorData(),
       loadUserSettings()
     ])
+    // Iniciar polling automático (a cada 2 minutos)
+    startSensorPolling()
   }
 
   return {
@@ -452,6 +483,8 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     updatePlant,
     lookupPlantAI,
     fetchSensorData,
+    startSensorPolling,
+    stopSensorPolling,
     calculateWatering,
     sendNotification,
     setNotifyTopic,

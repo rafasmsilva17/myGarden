@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useGreenhouseStore } from '@/stores/greenhouse'
 import { useAuthStore } from '@/stores/auth'
@@ -137,6 +137,11 @@ const toasts = computed(() => store.toasts)
 const showSettings = ref(false)
 const ntfyTopic = ref('')
 const isLoginPage = computed(() => route.name === 'login')
+
+// Parar polling quando a app é destruída
+onUnmounted(() => {
+  store.stopSensorPolling()
+})
 
 // Sincronizar ntfyTopic com o store quando este for carregado
 watch(() => store.notifyTopic, (newVal) => {

@@ -53,6 +53,10 @@ CREATE POLICY "Users can update their own plants" ON plants
 CREATE POLICY "Users can delete their own plants" ON plants
   FOR DELETE USING (auth.uid() = user_id);
 
+-- Backend (funções Netlify sem auth) pode ler todas as plantas
+CREATE POLICY "Backend can read all plants" ON plants
+  FOR SELECT USING (true);
+
 -- ===========================================
 -- Tabela: sensor_readings
 -- ===========================================
@@ -102,6 +106,10 @@ CREATE POLICY "Users can insert their own settings" ON user_settings
 CREATE POLICY "Users can update their own settings" ON user_settings
   FOR UPDATE USING (auth.uid() = user_id);
 
+-- Backend (funções Netlify sem auth) pode ler settings para enviar notificações
+CREATE POLICY "Backend can read all settings" ON user_settings
+  FOR SELECT USING (true);
+
 -- ===========================================
 -- Função: update_updated_at
 -- ===========================================
@@ -146,6 +154,10 @@ ALTER TABLE notifications_log ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own notification logs" ON notifications_log
   FOR SELECT USING (auth.uid() = user_id);
+
+-- Backend pode inserir logs de notificações
+CREATE POLICY "Backend can insert notification logs" ON notifications_log
+  FOR INSERT WITH CHECK (true);
 
 -- ===========================================
 -- IMPORTANTE: Configuração de Auth
