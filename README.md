@@ -2,8 +2,6 @@
 
 Aplicação web para gestão individual de plantas numa estufa vertical de 3 andares. Interface visual realista que imita tabuleiros de cultivo físicos.
 
-![GardenGes Preview](docs/preview.png)
-
 ## 🚀 Funcionalidades
 
 - **Interface Visual Realista**: Tabuleiros de cultivo com textura de terra e plantas em crescimento
