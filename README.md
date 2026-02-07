@@ -1,4 +1,4 @@
-# GardenGes 🌱
+# myGarden 🌱
 
 Aplicação web para gestão individual de plantas numa estufa vertical de 3 andares. Interface visual realista que imita tabuleiros de cultivo físicos.
 
