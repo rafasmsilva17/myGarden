@@ -160,6 +160,45 @@ CREATE POLICY "Backend can insert notification logs" ON notifications_log
   FOR INSERT WITH CHECK (true);
 
 -- ===========================================
+-- Tabela: sensor_history
+-- ===========================================
+-- Armazena histórico de leituras do sensor para gráficos e análises
+CREATE TABLE IF NOT EXISTS sensor_history (
+  id BIGSERIAL PRIMARY KEY,
+  timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,
+  temperatura_c DECIMAL(5,2) NOT NULL,
+  humidade_perc DECIMAL(5,2) NOT NULL CHECK (humidade_perc >= 0 AND humidade_perc <= 100),
+  vpd DECIMAL(5,3), -- Vapor Pressure Deficit (calculado)
+  device_name VARCHAR(255)
+);
+
+-- Índices para queries eficientes por intervalo de tempo
+CREATE INDEX IF NOT EXISTS idx_sensor_history_timestamp ON sensor_history(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_sensor_history_timestamp_range ON sensor_history(timestamp);
+
+-- RLS Policies para sensor_history (público para leitura, apenas backend insere)
+ALTER TABLE sensor_history ENABLE ROW LEVEL SECURITY;
+
+-- Qualquer utilizador autenticado pode ler o histórico (dados globais da estufa)
+CREATE POLICY "Anyone can read sensor history" ON sensor_history
+  FOR SELECT USING (true);
+
+-- Apenas o backend pode inserir dados
+CREATE POLICY "Backend can insert sensor history" ON sensor_history
+  FOR INSERT WITH CHECK (true);
+
+-- Função para limpar dados antigos (manter apenas últimos 90 dias)
+CREATE OR REPLACE FUNCTION cleanup_old_sensor_history()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM sensor_history WHERE timestamp < NOW() - INTERVAL '90 days';
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON TABLE sensor_history IS 'Histórico de leituras do sensor para gráficos e tendências';
+COMMENT ON COLUMN sensor_history.vpd IS 'Vapor Pressure Deficit em kPa';
+
+-- ===========================================
 -- IMPORTANTE: Configuração de Auth
 -- ===========================================
 -- No Supabase Dashboard:

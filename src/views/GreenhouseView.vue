@@ -34,6 +34,20 @@
       </div>
     </div>
 
+    <!-- Acções Rápidas -->
+    <div class="quick-actions">
+      <router-link to="/plant-care" class="quick-action-btn">
+        <span class="action-icon">🌿</span>
+        <span class="action-text">Guia de Cuidados</span>
+        <span class="action-desc">Informações detalhadas sobre cada planta</span>
+      </router-link>
+      <router-link to="/history" class="quick-action-btn">
+        <span class="action-icon">📊</span>
+        <span class="action-text">Histórico & Tendências</span>
+        <span class="action-desc">Gráficos de temperatura e humidade</span>
+      </router-link>
+    </div>
+
     <!-- Estrutura da Estufa (3 andares) -->
     <div class="greenhouse-structure">
       <!-- Suporte metálico lateral esquerdo -->
@@ -305,6 +319,51 @@ const getHumidityClass = (humidity) => {
   margin-top: 12px;
   font-size: 12px;
   color: rgba(255,255,255,0.5);
+}
+
+/* Acções Rápidas */
+.quick-actions {
+  max-width: 500px;
+  margin: 0 auto 24px;
+  display: flex;
+  gap: 12px;
+}
+
+.quick-action-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px;
+  background: linear-gradient(145deg, #2d5a43, #1e3a2d);
+  border: 1px solid rgba(129, 199, 132, 0.3);
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.quick-action-btn:hover {
+  background: linear-gradient(145deg, #3a7056, #2d5a43);
+  border-color: rgba(129, 199, 132, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+
+.action-icon {
+  font-size: 1.5rem;
+}
+
+.action-text {
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.action-desc {
+  color: rgba(165, 214, 167, 0.8);
+  font-size: 0.75rem;
+  text-align: center;
 }
 
 /* Estrutura da Estufa */

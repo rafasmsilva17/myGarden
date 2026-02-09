@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import axios from 'axios'
 import * as supabaseLib from '@/lib/supabase'
+import { useAuthStore } from '@/stores/auth'
 
 const API_BASE = '/.netlify/functions'
 
@@ -75,8 +76,14 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // ========== API CALLS (Supabase) ==========
   
+  // Helper para verificar modo demo
+  const _isDemo = () => {
+    try { return useAuthStore().isDemo } catch { return false }
+  }
+
   // Buscar todas as plantas
   const fetchPlants = async () => {
+    if (_isDemo()) return // Em demo usa dados já carregados
     isLoading.value = true
     try {
       const { data, error } = await supabaseLib.fetchPlants()
@@ -93,6 +100,11 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Adicionar planta
   const addPlant = async (plantData) => {
+    if (_isDemo()) {
+      const demoPlant = { ...plantData, id: 'demo-' + Date.now() }
+      plants.value.push(demoPlant)
+      return demoPlant
+    }
     try {
       const { data, error } = await supabaseLib.addPlant(plantData)
       if (error) throw error
@@ -109,6 +121,11 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Remover planta
   const removePlant = async (plantId) => {
+    if (_isDemo()) {
+      plants.value = plants.value.filter(p => p.id !== plantId)
+      showToast('Planta removida com sucesso', 'success')
+      return
+    }
     try {
       const { error } = await supabaseLib.deletePlant(plantId)
       if (error) throw error
@@ -123,6 +140,14 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Atualizar planta
   const updatePlant = async (plantId, updates) => {
+    if (_isDemo()) {
+      const index = plants.value.findIndex(p => p.id === plantId)
+      if (index !== -1) {
+        plants.value[index] = { ...plants.value[index], ...updates }
+      }
+      showToast('Planta atualizada', 'success')
+      return
+    }
     try {
       const { data, error } = await supabaseLib.updatePlant(plantId, updates)
       if (error) throw error
@@ -142,6 +167,13 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Buscar dados da IA
   const lookupPlantAI = async (plantName) => {
+    if (_isDemo()) {
+      // Simular delay de IA
+      isLoading.value = true
+      await new Promise(r => setTimeout(r, 800))
+      isLoading.value = false
+      return getMockAIData(plantName)
+    }
     isLoading.value = true
     try {
       const response = await axios.post(`${API_BASE}/ai-lookup`, { name: plantName })
@@ -157,6 +189,14 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Buscar dados dos sensores (eWeLink)
   const fetchSensorData = async () => {
+    if (_isDemo()) {
+      // Simular pequena variação nos sensores
+      sensor.value = {
+        humidity: 50 + Math.round(Math.random() * 10),
+        temperature: 22 + Math.round(Math.random() * 4 * 10) / 10
+      }
+      return
+    }
     try {
       const response = await axios.get(`${API_BASE}/sensors`)
       sensor.value = response.data.sensor || { humidity: 0, temperature: 0 }
@@ -238,6 +278,10 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   // Configurar tópico de notificações (guarda no Supabase)
   const setNotifyTopic = async (topic) => {
     notifyTopic.value = topic
+    if (_isDemo()) {
+      showToast('Demo: notificações não disponíveis', 'warning')
+      return
+    }
     try {
       await supabaseLib.saveUserSettings({ ntfy_topic: topic })
       showToast('Notificações configuradas!', 'success')
@@ -249,6 +293,7 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
   
   // Carregar configurações do utilizador
   const loadUserSettings = async () => {
+    if (_isDemo()) return
     try {
       const { data, error } = await supabaseLib.fetchUserSettings()
       console.log('Configurações carregadas:', data, 'Erro:', error)
@@ -455,6 +500,24 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     startSensorPolling()
   }
 
+  // Inicialização em modo demo (dados mock, sem API)
+  const initializeDemo = () => {
+    plants.value = getMockPlants()
+    sensor.value = { humidity: 52, temperature: 23.5 }
+    notifyTopic.value = ''
+    isLoading.value = false
+    showToast('🎭 Modo Demo ativo — dados simulados', 'info')
+  }
+
+  // Reset completo (para sair da demo)
+  const resetStore = () => {
+    plants.value = []
+    sensor.value = { humidity: 0, temperature: 0 }
+    notifyTopic.value = ''
+    selectedPlant.value = null
+    stopSensorPolling()
+  }
+
   return {
     // State
     plants,
@@ -490,6 +553,9 @@ export const useGreenhouseStore = defineStore('greenhouse', () => {
     setNotifyTopic,
     loadUserSettings,
     checkAndNotify,
-    initialize
+    initialize,
+    initializeDemo,
+    resetStore,
+    getMockAIData
   }
 })

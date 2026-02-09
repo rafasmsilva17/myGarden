@@ -13,11 +13,13 @@ export const useAuthStore = defineStore('auth', () => {
   const session = ref(null)
   const loading = ref(true)
   const error = ref(null)
+  const isDemo = ref(false)
 
   // ========== GETTERS ==========
-  const isAuthenticated = computed(() => !!user.value)
-  const userEmail = computed(() => user.value?.email || '')
-  const userId = computed(() => user.value?.id || null)
+  const isAuthenticated = computed(() => !!user.value || isDemo.value)
+  const isDemoMode = computed(() => isDemo.value)
+  const userEmail = computed(() => isDemo.value ? 'demo@mygarden.app' : (user.value?.email || ''))
+  const userId = computed(() => isDemo.value ? 'demo-user' : (user.value?.id || null))
 
   // ========== ACTIONS ==========
   
@@ -124,9 +126,12 @@ export const useAuthStore = defineStore('auth', () => {
     error.value = null
     
     try {
-      await signOut()
+      if (!isDemo.value) {
+        await signOut()
+      }
       user.value = null
       session.value = null
+      isDemo.value = false
       return { success: true }
     } catch (err) {
       console.error('Erro no logout:', err)
@@ -135,6 +140,18 @@ export const useAuthStore = defineStore('auth', () => {
     } finally {
       loading.value = false
     }
+  }
+
+  /**
+   * Login em modo demo (sem Supabase)
+   */
+  const loginAsDemo = () => {
+    isDemo.value = true
+    user.value = null
+    session.value = null
+    loading.value = false
+    error.value = null
+    return { success: true }
   }
 
   /**
@@ -167,13 +184,16 @@ export const useAuthStore = defineStore('auth', () => {
     session,
     loading,
     error,
+    isDemo,
     // Getters
     isAuthenticated,
+    isDemoMode,
     userEmail,
     userId,
     // Actions
     initialize,
     login,
+    loginAsDemo,
     register,
     logout,
     clearError

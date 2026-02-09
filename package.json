@@ -13,11 +13,13 @@
     "@netlify/functions": "^5.1.2",
     "@supabase/supabase-js": "^2.94.0",
     "axios": "^1.6.2",
+    "chart.js": "^4.5.1",
     "ewelink-api": "^3.1.1",
     "ewelink-api-next": "^1.0.4",
     "netlify": "^23.14.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.0",
+    "vue-chartjs": "^5.3.3",
     "vue-router": "^4.2.5"
   },
   "devDependencies": {

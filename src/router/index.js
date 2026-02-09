@@ -3,6 +3,8 @@ import { useAuthStore } from '@/stores/auth'
 import GreenhouseView from '@/views/GreenhouseView.vue'
 import FloorView from '@/views/FloorView.vue'
 import LoginView from '@/views/LoginView.vue'
+import PlantCareView from '@/views/PlantCareView.vue'
+import HistoryView from '@/views/HistoryView.vue'
 
 const routes = [
   {
@@ -24,6 +26,18 @@ const routes = [
     props: true,
     meta: { requiresAuth: true }
   },
+  {
+    path: '/plant-care',
+    name: 'plant-care',
+    component: PlantCareView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/history',
+    name: 'history',
+    component: HistoryView,
+    meta: { requiresAuth: true }
+  },
 ]
 
 const router = createRouter({
@@ -40,8 +54,8 @@ router.beforeEach((to, from, next) => {
   
   const authStore = useAuthStore()
   
-  // Verificar se requer autenticação
-  if (to.meta.requiresAuth && !authStore.isAuthenticated) {
+  // Permitir acesso em modo demo ou autenticado
+  if (to.meta.requiresAuth && !authStore.isAuthenticated && !authStore.isDemo) {
     return next('/login')
   }
   

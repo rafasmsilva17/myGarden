@@ -8,6 +8,7 @@
             <span class="text-xl sm:text-2xl">🌱</span>
           </div>
           <h1 class="text-lg sm:text-2xl font-bold text-white">myGarden</h1>
+          <span v-if="authStore.isDemoMode" class="ml-2 px-2 py-0.5 text-xs font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 rounded-full">DEMO</span>
         </router-link>
         <nav class="flex items-center gap-2 sm:gap-4">
           <button
@@ -171,6 +172,9 @@ const testNotification = async () => {
 }
 
 const handleLogout = async () => {
+  if (authStore.isDemoMode) {
+    store.resetStore()
+  }
   await authStore.logout()
   showSettings.value = false
   router.push('/login')

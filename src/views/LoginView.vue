@@ -96,6 +96,14 @@
           <span v-else>{{ activeTab === 'login' ? '🚀 Entrar' : '📝 Criar Conta' }}</span>
         </button>
       </form>
+
+      <!-- Demo -->
+      <div class="demo-section">
+        <p class="demo-text">Sem conta? Experimenta primeiro!</p>
+        <button class="demo-btn" @click="startDemo">
+          🎭 Correr Demo
+        </button>
+      </div>
     </div>
 
     <!-- Background decorations -->
@@ -112,9 +120,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useGreenhouseStore } from '@/stores/greenhouse'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const greenhouseStore = useGreenhouseStore()
 
 const activeTab = ref('login')
 const email = ref('')
@@ -122,6 +132,12 @@ const password = ref('')
 const confirmPassword = ref('')
 const showPassword = ref(false)
 const successMessage = ref('')
+
+const startDemo = () => {
+  authStore.loginAsDemo()
+  greenhouseStore.initializeDemo()
+  router.push('/')
+}
 
 const handleSubmit = async () => {
   successMessage.value = ''

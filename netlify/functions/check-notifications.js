@@ -92,6 +92,14 @@ const sendNtfyNotification = async (topic, title, message, priority = 'default')
   }
 }
 
+// Calcular VPD (Vapor Pressure Deficit) em kPa
+// VPD = SVP * (1 - RH/100) onde SVP = 0.6108 * exp(17.27 * T / (T + 237.3))
+const calculateVPD = (temperatureC, humidityPercent) => {
+  const svp = 0.6108 * Math.exp((17.27 * temperatureC) / (temperatureC + 237.3))
+  const vpd = svp * (1 - humidityPercent / 100)
+  return Math.round(vpd * 1000) / 1000 // 3 casas decimais
+}
+
 export const handler = async (event) => {
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "" }
@@ -142,6 +150,28 @@ export const handler = async (event) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
     log(`✅ Supabase OK (service_role: ${supabaseKey.includes('service_role') ? 'sim' : 'não'})`)
 
+    // 3.5 Guardar leitura no histórico (sensor_history)
+    try {
+      const vpd = calculateVPD(sensorData.temperature, sensorData.humidity)
+      const { error: historyError } = await supabase
+        .from('sensor_history')
+        .insert({
+          timestamp: new Date().toISOString(),
+          temperatura_c: sensorData.temperature,
+          humidade_perc: sensorData.humidity,
+          vpd: vpd,
+          device_name: sensorData.deviceName || null
+        })
+      
+      if (historyError) {
+        log(`⚠️ Erro ao guardar histórico: ${historyError.message}`)
+      } else {
+        log(`📈 Histórico guardado (VPD: ${vpd} kPa)`)
+      }
+    } catch (histErr) {
+      log(`⚠️ Histórico falhou: ${histErr.message}`)
+    }
+
     // 4. Buscar utilizadores
     const { data: users, error: usersError } = await supabase
       .from('user_settings')
@@ -168,13 +198,21 @@ export const handler = async (event) => {
         
         log(`🌱 Target médio: ${avgTarget}% (${allPlants?.length || 0} plantas)`)
         const diff = avgTarget - sensorData.humidity
+        const excessHumidity = sensorData.humidity - avgTarget
 
         if (diff > 5) {
+          // Humidade muito baixa - precisa de rega
           const sprays = Math.round((diff * 2) / 0.55)
           const msg = `A estufa precisa de ~${sprays} sprays. Humidade: ${sensorData.humidity}% (target: ${avgTarget}%)`
           const sent = await sendNtfyNotification(topic, '🌱 myGarden - Rega necessária!', msg, 'high')
           log(sent ? '✅ Notificação enviada!' : '❌ Falha ntfy')
           return { statusCode: 200, headers, body: JSON.stringify({ success: true, fallback: true, sent, sensorData, logs }) }
+        } else if (excessHumidity > 10) {
+          // Humidade muito alta - precisa de ventilação
+          const msg = `Humidade elevada (${sensorData.humidity}%). Target: ${avgTarget}%. Abrir estufa para ventilar e evitar fungos.`
+          const sent = await sendNtfyNotification(topic, '💨 myGarden - Ventilar estufa!', msg, 'high')
+          log(sent ? '✅ Notificação de ventilação enviada!' : '❌ Falha ntfy')
+          return { statusCode: 200, headers, body: JSON.stringify({ success: true, fallback: true, type: 'ventilation', sent, sensorData, logs }) }
         }
 
         log(`✓ Humidade OK (${sensorData.humidity}% vs ${avgTarget}%)`)
@@ -200,9 +238,10 @@ export const handler = async (event) => {
           : 65
 
         const diff = avgTarget - sensorData.humidity
+        const excessHumidity = sensorData.humidity - avgTarget
 
         if (diff > 5) {
-          // Spam check
+          // Humidade muito baixa - precisa de rega
           const { data: lastNotif } = await supabase
             .from('notifications_log')
             .select('created_at')
@@ -223,10 +262,36 @@ export const handler = async (event) => {
                 user_id: user.user_id, type: 'watering', message: msg, created_at: new Date().toISOString()
               })
               sent++
-              log(`✅ Enviado → ${user.ntfy_topic}`)
+              log(`✅ Enviado (rega) → ${user.ntfy_topic}`)
             }
           } else {
-            log(`⏳ ${user.user_id} já notificado`)
+            log(`⏳ ${user.user_id} já notificado (rega)`)
+          }
+        } else if (excessHumidity > 10) {
+          // Humidade muito alta - precisa de ventilação
+          const { data: lastNotif } = await supabase
+            .from('notifications_log')
+            .select('created_at')
+            .eq('user_id', user.user_id)
+            .eq('type', 'ventilation')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single()
+
+          const canNotify = !lastNotif || (Date.now() - new Date(lastNotif.created_at).getTime()) >= 3600000
+
+          if (canNotify) {
+            const msg = `Humidade elevada (${sensorData.humidity}%). Target: ${Math.round(avgTarget)}%. Abrir estufa para ventilar e evitar fungos.`
+            const ok = await sendNtfyNotification(user.ntfy_topic, '💨 Ventilar estufa!', msg, 'high')
+            if (ok) {
+              await supabase.from('notifications_log').insert({
+                user_id: user.user_id, type: 'ventilation', message: msg, created_at: new Date().toISOString()
+              })
+              sent++
+              log(`✅ Enviado (ventilação) → ${user.ntfy_topic}`)
+            }
+          } else {
+            log(`⏳ ${user.user_id} já notificado (ventilação)`)
           }
         } else {
           log(`✓ OK para ${user.user_id}`)
