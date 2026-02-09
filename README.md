@@ -1,8 +1,6 @@
-# GardenGes 🌱
+# myGarden 🌱
 
 Aplicação web para gestão individual de plantas numa estufa vertical de 3 andares. Interface visual realista que imita tabuleiros de cultivo físicos.
-
-![GardenGes Preview](docs/preview.png)
 
 ## 🚀 Funcionalidades
 
@@ -26,7 +24,7 @@ Aplicação web para gestão individual de plantas numa estufa vertical de 3 and
 - **Python** (Netlify Functions - Serverless)
 - **eWeLink API** (Sensores)
 - **ntfy.sh** (Notificações)
-- **OpenAI API** (Dados de plantas - opcional)
+- **Groq API** (Dados de plantas - opcional)
 
 ## 📁 Estrutura do Projeto
 
@@ -156,10 +154,4 @@ Onde:
 - [ ] Automação de rega via relés eWeLink
 - [ ] App móvel nativa
 
-## 📄 Licença
-
-MIT License - Uso livre para projectos pessoais e comerciais.
-
 ---
-
-Feito com 💚 para jardineiros tech-savvy
